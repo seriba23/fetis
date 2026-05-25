@@ -1,0 +1,435 @@
+// Fetis Muebles - Schema Prisma
+// MySQL/MariaDB
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USUARIOS Y AUTENTICACIÓN
+// ============================================================================
+
+enum UserRole {
+  ADMIN
+  EMPLOYEE
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  phone        String?
+  role         UserRole @default(EMPLOYEE)
+  avatarUrl    String?  @map("avatar_url")
+  active       Boolean  @default(true)
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  refreshTokens RefreshToken[]
+  createdQuotes Quote[]        @relation("QuoteCreatedBy")
+  payments      Payment[]      @relation("PaymentRegisteredBy")
+  expenses      Expense[]      @relation("ExpenseRegisteredBy")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ============================================================================
+// CLIENTES
+// ============================================================================
+
+model Client {
+  id           String   @id @default(uuid())
+  name         String
+  email        String?  @unique
+  phone        String   @unique
+  // Domicilio
+  street       String?  @db.VarChar(160)
+  extNumber    String?  @map("ext_number") @db.VarChar(20)
+  intNumber    String?  @map("int_number") @db.VarChar(20)
+  neighborhood String?  @db.VarChar(120)
+  city         String?  @db.VarChar(80)
+  state        String?  @db.VarChar(80)
+  postalCode   String?  @map("postal_code") @db.VarChar(10)
+  country      String?  @default("México") @db.VarChar(60)
+  addressNotes String?  @map("address_notes") @db.Text  // referencias, entre calles
+  // Otros
+  notes        String?  @db.Text
+  source       String?  // landing, walkin, referido, etc.
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  appointments Appointment[]
+  quotes       Quote[]
+  payments     Payment[]
+
+  @@map("clients")
+}
+
+// ============================================================================
+// CITAS
+// ============================================================================
+
+enum AppointmentType {
+  CONSULTATION  // Consulta inicial
+  MEASUREMENT   // Levantamiento/medición a domicilio
+  DELIVERY      // Entrega/instalación
+  AFTERSALE     // Post-venta / garantía
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  RESCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model Appointment {
+  id            String            @id @default(uuid())
+  clientId      String            @map("client_id")
+  type          AppointmentType   @default(CONSULTATION)
+  status        AppointmentStatus @default(PENDING)
+  title         String?
+  startTime     DateTime          @map("start_time")
+  endTime       DateTime          @map("end_time")
+  address       String?           @db.Text  // dirección si es medición/entrega
+  notes         String?           @db.Text
+  internalNotes String?           @map("internal_notes") @db.Text
+  cancellationReason String?      @map("cancellation_reason") @db.Text
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([startTime])
+  @@index([status])
+  @@map("appointments")
+}
+
+// ============================================================================
+// CATÁLOGO DE MUEBLES (TIPOS CON SCHEMA DE ATRIBUTOS)
+// ============================================================================
+
+model FurnitureType {
+  id                String   @id @default(uuid())
+  slug              String   @unique
+  name              String
+  icon              String?  // emoji o nombre de ícono
+  description       String?  @db.Text
+  attributesSchema  Json     @map("attributes_schema")
+  // attributesSchema es un array: [{ key, label, type, unit?, options?, placeholder?, required? }]
+  order             Int      @default(0)
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  quoteItems QuoteItem[]
+
+  @@map("furniture_types")
+}
+
+// ============================================================================
+// COTIZACIONES
+// ============================================================================
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CONVERTED   // ya se convirtió en venta/proyecto
+}
+
+model Quote {
+  id          String      @id @default(uuid())
+  number      String      @unique  // FET-0001, FET-0002...
+  clientId    String      @map("client_id")
+  createdById String?     @map("created_by_id")
+  status      QuoteStatus @default(DRAFT)
+  subtotal    Decimal     @default(0) @db.Decimal(12, 2)
+  discount    Decimal     @default(0) @db.Decimal(12, 2)
+  taxRate     Decimal     @default(0) @map("tax_rate") @db.Decimal(5, 2)  // % impuestos opcional
+  taxAmount   Decimal     @default(0) @map("tax_amount") @db.Decimal(12, 2)
+  total       Decimal     @default(0) @db.Decimal(12, 2)
+  paidAmount  Decimal     @default(0) @map("paid_amount") @db.Decimal(12, 2)
+  validUntil  DateTime?   @map("valid_until")
+  notes       String?     @db.Text
+  internalNotes String?   @map("internal_notes") @db.Text
+  sentAt      DateTime?   @map("sent_at")
+  acceptedAt  DateTime?   @map("accepted_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  client    Client      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  createdBy User?       @relation("QuoteCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  items     QuoteItem[]
+  payments  Payment[]
+
+  @@index([clientId])
+  @@index([status])
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id              String  @id @default(uuid())
+  quoteId         String  @map("quote_id")
+  furnitureTypeId String  @map("furniture_type_id")
+  title           String  // título legible: "Cocina integral L-shape 3.5m"
+  specs           Json    // valores de los atributos según schema del tipo
+  notes           String? @db.Text  // observaciones / extras libres
+  unitPrice       Decimal @default(0) @map("unit_price") @db.Decimal(12, 2)
+  quantity        Int     @default(1)
+  subtotal        Decimal @default(0) @db.Decimal(12, 2)
+  order           Int     @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  quote         Quote         @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  furnitureType FurnitureType @relation(fields: [furnitureTypeId], references: [id], onDelete: Restrict)
+
+  @@index([quoteId])
+  @@map("quote_items")
+}
+
+// ============================================================================
+// PAGOS
+// ============================================================================
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  CHECK
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentConcept {
+  DEPOSIT       // anticipo
+  PROGRESS      // pago de avance
+  FINAL         // liquidación
+  EXTRA         // adicional
+  OTHER
+}
+
+model Payment {
+  id             String         @id @default(uuid())
+  clientId       String         @map("client_id")
+  quoteId        String?        @map("quote_id")
+  registeredById String?        @map("registered_by_id")
+  amount         Decimal        @db.Decimal(12, 2)
+  method         PaymentMethod  @default(CASH)
+  status         PaymentStatus  @default(COMPLETED)
+  concept        PaymentConcept @default(DEPOSIT)
+  reference      String?        // núm. de transferencia, último 4 tarjeta
+  receiptUrl     String?        @map("receipt_url")
+  paidAt         DateTime       @map("paid_at")
+  notes          String?        @db.Text
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  client       Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  quote        Quote? @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  registeredBy User?  @relation("PaymentRegisteredBy", fields: [registeredById], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([quoteId])
+  @@index([paidAt])
+  @@map("payments")
+}
+
+// ============================================================================
+// GASTOS (PLANTILLAS RECURRENTES + INSTANCIAS)
+// ============================================================================
+
+enum ExpenseCategory {
+  RENT         // renta del local
+  SOFTWARE     // suscripciones
+  SALARY       // sueldos / nóminas
+  SUPPLIER     // proveedores / materiales
+  UTILITIES    // luz, agua, internet
+  MARKETING
+  MAINTENANCE
+  TAXES
+  OTHER
+}
+
+enum ExpenseStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum RecurrenceFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+model ExpenseTemplate {
+  id            String              @id @default(uuid())
+  name          String
+  category      ExpenseCategory
+  amount        Decimal             @db.Decimal(12, 2)
+  frequency     RecurrenceFrequency
+  dayOfMonth    Int?                @map("day_of_month")     // 1-31 para MONTHLY/QUARTERLY/YEARLY
+  dayOfWeek     Int?                @map("day_of_week")      // 0-6 para WEEKLY/BIWEEKLY
+  monthOfYear   Int?                @map("month_of_year")    // 1-12 para YEARLY
+  payee         String?             // a quién se le paga
+  notes         String?             @db.Text
+  startsOn      DateTime            @map("starts_on")
+  endsOn        DateTime?           @map("ends_on")
+  active        Boolean             @default(true)
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  expenses Expense[]
+
+  @@map("expense_templates")
+}
+
+model Expense {
+  id             String          @id @default(uuid())
+  name           String
+  category       ExpenseCategory
+  amount         Decimal         @db.Decimal(12, 2)
+  date           DateTime        // fecha esperada/de pago
+  paidAt         DateTime?       @map("paid_at")
+  status         ExpenseStatus   @default(PENDING)
+  payee          String?
+  method         PaymentMethod?
+  reference      String?
+  receiptUrl     String?         @map("receipt_url")
+  notes          String?         @db.Text
+  templateId     String?         @map("template_id")
+  registeredById String?         @map("registered_by_id")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  template     ExpenseTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  registeredBy User?            @relation("ExpenseRegisteredBy", fields: [registeredById], references: [id], onDelete: SetNull)
+
+  @@index([date])
+  @@index([status])
+  @@index([category])
+  @@map("expenses")
+}
+
+// ============================================================================
+// GALERÍA (LANDING PÚBLICA)
+// ============================================================================
+
+model GalleryCategory {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  description String?  @db.Text
+  order       Int      @default(0)
+  visible     Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  items GalleryItem[]
+
+  @@map("gallery_categories")
+}
+
+model GalleryItem {
+  id          String   @id @default(uuid())
+  categoryId  String   @map("category_id")
+  imageUrl    String   @map("image_url")
+  thumbUrl    String?  @map("thumb_url")
+  title       String?
+  description String?  @db.Text
+  order       Int      @default(0)
+  visible     Boolean  @default(true)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category GalleryCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([categoryId])
+  @@index([visible])
+  @@map("gallery_items")
+}
+
+// ============================================================================
+// FORMULARIO DE CONTACTO PÚBLICO
+// ============================================================================
+
+enum ContactRequestStatus {
+  NEW
+  CONTACTED
+  SCHEDULED
+  CONVERTED
+  DISCARDED
+}
+
+model ContactRequest {
+  id              String               @id @default(uuid())
+  name            String
+  email           String?
+  phone           String
+  furnitureType   String?              @map("furniture_type") // slug del tipo de interés
+  message         String               @db.Text
+  status          ContactRequestStatus @default(NEW)
+  clientId        String?              @map("client_id")
+  appointmentId   String?              @map("appointment_id")
+  source          String?              // referer URL
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("contact_requests")
+}
+
+// ============================================================================
+// CONFIGURACIÓN (KEY-VALUE)
+// ============================================================================
+
+model Setting {
+  key       String   @id
+  value     String   @db.Text
+  type      String   @default("string")  // string, number, boolean, json
+  group     String   @default("general")  // general, landing, business, notifications
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}

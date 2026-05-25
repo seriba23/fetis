@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Marca (independiente de tema) */
+  --brand: #A435F0;
+  --brand-dark: #7B27BD;
+  --brand-tint: rgba(164, 53, 240, 0.10);
+}
+
+/* Tema claro (default) — admin y landing */
+[data-theme='light'], :root {
+  --bg-canvas: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-hover: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --accent: #A435F0;
+  --accent-tint: rgba(164, 53, 240, 0.10);
+
+  /* Landing en claro */
+  --ld-bg: #FFFFFF;
+  --ld-surface: #F8FAFC;
+  --ld-surface-2: #F1F5F9;
+  --ld-text: #0F172A;
+  --ld-text-muted: #475569;
+  --ld-border: rgba(15, 23, 42, 0.08);
+  --ld-glass: rgba(255, 255, 255, 0.78);
+}
+
+/* Tema oscuro — admin y landing */
+[data-theme='dark'] {
+  --bg-canvas: #0A0A0A;
+  --bg-surface: #141414;
+  --bg-surface-hover: #1F1F1F;
+  --text-primary: #FAFAFA;
+  --text-secondary: #D4D4D8;
+  --text-muted: #71717A;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --accent: #B85CF1;
+  --accent-tint: rgba(184, 92, 241, 0.16);
+
+  /* Landing en oscuro */
+  --ld-bg: #0A0A0A;
+  --ld-surface: #141414;
+  --ld-surface-2: #1A1A1A;
+  --ld-text: #FAFAFA;
+  --ld-text-muted: #A1A1AA;
+  --ld-border: rgba(255, 255, 255, 0.08);
+  --ld-glass: rgba(20, 20, 20, 0.7);
+}
+
+html, body {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+}
+
+/* Landing oscura: forzar tema oscuro en rutas /(landing) via clase */
+body.landing-theme {
+  background: var(--ld-bg);
+  color: var(--ld-text);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Utilidades adicionales */
+.glass {
+  background: var(--ld-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #B85CF1 0%, #A435F0 50%, #7B27BD 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-bg {
+  background: radial-gradient(ellipse at top, rgba(164, 53, 240, 0.18), transparent 60%),
+              radial-gradient(ellipse at bottom right, rgba(123, 39, 189, 0.10), transparent 50%);
+}
+
+/* Animación entrada */
+.animate-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+/* Layout shift de imágenes */
+.gallery-img {
+  background: var(--ld-surface);
+}
+
+/* Calendario */
+.cal-event {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.cal-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -8px rgba(0,0,0,0.25);
+}
