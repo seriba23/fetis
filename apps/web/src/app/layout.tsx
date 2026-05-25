@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 
@@ -20,11 +20,23 @@ export const metadata: Metadata = {
   description:
     'Muebles a medida que transforman tu espacio. Cocinas, closets, salas, recámaras y más, diseñados y fabricados artesanalmente.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:4000'),
+  applicationName: 'Fetis Muebles',
+  appleWebApp: {
+    capable: true,
+    title: 'Fetis',
+    statusBarStyle: 'black-translucent',
+  },
   openGraph: {
     title: 'Fetis Muebles',
     description: 'Muebles a medida que transforman tu espacio.',
     type: 'website',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0A0A0A',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
