@@ -9,8 +9,8 @@ out/
 .env.local
 .env.*.local
 !.env.example
-uploads/
-!uploads/.gitkeep
+/uploads/
+!/uploads/.gitkeep
 .DS_Store
 Thumbs.db
 prisma/migrations/dev.db*
