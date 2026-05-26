@@ -13,7 +13,10 @@ export default async function LandingLayout({ children }: { children: React.Reac
   }
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--ld-bg)', color: 'var(--ld-text)' }}>
-      <LandingHeader />
+      <LandingHeader
+        logoText={business['branding.logo_text'] || 'FETIS'}
+        logoSubtitle={business['branding.logo_subtitle'] || 'MUEBLES'}
+      />
       <main className="flex-1">{children}</main>
       <LandingFooter business={business} />
       <WhatsAppButton phone={business['business.whatsapp']} />

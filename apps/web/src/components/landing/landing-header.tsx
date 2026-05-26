@@ -13,7 +13,13 @@ const NAV = [
   { href: '/contacto', label: 'Contacto' },
 ];
 
-export function LandingHeader() {
+export function LandingHeader({
+  logoText = 'FETIS',
+  logoSubtitle = 'MUEBLES',
+}: {
+  logoText?: string;
+  logoSubtitle?: string;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -35,8 +41,10 @@ export function LandingHeader() {
       <div className="max-w-7xl mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <span className="text-2xl font-display font-semibold tracking-wide">
-            <span className="gradient-text">FETIS</span>
-            <span className="text-ink-500 dark:text-white/40 text-sm ml-1.5 font-light tracking-[0.3em]">MUEBLES</span>
+            <span className="gradient-text">{logoText}</span>
+            {logoSubtitle && (
+              <span className="text-ink-500 dark:text-white/40 text-sm ml-1.5 font-light tracking-[0.3em]">{logoSubtitle}</span>
+            )}
           </span>
         </Link>
 

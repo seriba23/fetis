@@ -41,7 +41,7 @@ export class PublicService {
 
   async getBusinessInfo() {
     const settings = await this.prisma.setting.findMany({
-      where: { group: { in: ['business', 'landing', 'general'] } },
+      where: { group: { in: ['business', 'landing', 'general', 'branding'] } },
     });
     const result: Record<string, any> = {};
     for (const s of settings) {

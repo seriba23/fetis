@@ -3,6 +3,8 @@ import { Mail, MapPin, Phone, Instagram, Facebook } from 'lucide-react';
 
 export function LandingFooter({ business }: { business: Record<string, string> }) {
   const name = business['business.name'] || 'Fetis Muebles';
+  const logoText = business['branding.logo_text'] || 'FETIS';
+  const logoSubtitle = business['branding.logo_subtitle'] || 'MUEBLES';
   const email = business['business.email'];
   const phone = business['business.phone'];
   const address = business['business.address'];
@@ -15,8 +17,10 @@ export function LandingFooter({ business }: { business: Record<string, string> }
         <div className="grid md:grid-cols-3 gap-12">
           <div>
             <div className="text-2xl font-display">
-              <span className="gradient-text">FETIS</span>
-              <span className="text-ink-500 dark:text-white/40 text-sm ml-1.5 tracking-[0.3em]">MUEBLES</span>
+              <span className="gradient-text">{logoText}</span>
+              {logoSubtitle && (
+                <span className="text-ink-500 dark:text-white/40 text-sm ml-1.5 tracking-[0.3em]">{logoSubtitle}</span>
+              )}
             </div>
             <p className="mt-4 text-ink-600 dark:text-white/60 text-sm leading-relaxed max-w-xs">
               Diseño y fabricación de muebles a medida con atención al detalle, materiales premium y acabados de calidad.

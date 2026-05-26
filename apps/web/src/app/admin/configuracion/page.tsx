@@ -6,22 +6,44 @@ import { PageHeader } from '@/components/admin/page-header';
 import { Card, CardBody, CardHeader } from '@/components/admin/card';
 import { Button, Input, Label, Textarea } from '@/components/admin/ui-primitives';
 
-const FIELDS = [
-  { group: 'business', items: [
-    { key: 'business.name', label: 'Nombre del negocio', type: 'text' },
-    { key: 'business.email', label: 'Email', type: 'email' },
-    { key: 'business.whatsapp', label: 'WhatsApp (incluye lada país, sin signos)', type: 'text', placeholder: '5215555555555' },
-    { key: 'business.phone', label: 'Teléfono fijo', type: 'text' },
-    { key: 'business.address', label: 'Dirección', type: 'textarea' },
-    { key: 'business.instagram', label: 'URL Instagram', type: 'url' },
-    { key: 'business.facebook', label: 'URL Facebook', type: 'url' },
-  ]},
-  { group: 'landing', items: [
-    { key: 'landing.hero_title', label: 'Título del hero', type: 'text' },
-    { key: 'landing.hero_subtitle', label: 'Subtítulo del hero', type: 'textarea' },
-    { key: 'landing.about_title', label: 'Título sección "Nosotros"', type: 'text' },
-    { key: 'landing.about_text', label: 'Texto sección "Nosotros"', type: 'textarea' },
-  ]},
+type FieldType = 'text' | 'email' | 'url' | 'textarea' | 'color';
+interface FieldDef { key: string; label: string; type: FieldType; placeholder?: string; hint?: string }
+interface Section { group: string; title: string; subtitle?: string; items: FieldDef[] }
+
+const FIELDS: Section[] = [
+  {
+    group: 'branding',
+    title: 'Marca',
+    subtitle: 'Personaliza el logo y el color principal — se reflejan en toda la landing',
+    items: [
+      { key: 'branding.logo_text', label: 'Logo (palabra principal)', type: 'text', placeholder: 'FETIS', hint: 'Aparece con efecto degradado en header y footer' },
+      { key: 'branding.logo_subtitle', label: 'Logo (subtítulo)', type: 'text', placeholder: 'MUEBLES', hint: 'Aparece a la derecha con letras separadas y tono atenuado' },
+      { key: 'branding.primary_color', label: 'Color principal', type: 'color', hint: 'Botones, badges, gradiente del logo y links de acento' },
+    ],
+  },
+  {
+    group: 'business',
+    title: 'Datos del negocio',
+    items: [
+      { key: 'business.name', label: 'Nombre del negocio', type: 'text' },
+      { key: 'business.email', label: 'Email', type: 'email' },
+      { key: 'business.whatsapp', label: 'WhatsApp (incluye lada país, sin signos)', type: 'text', placeholder: '5215555555555' },
+      { key: 'business.phone', label: 'Teléfono fijo', type: 'text' },
+      { key: 'business.address', label: 'Dirección', type: 'textarea' },
+      { key: 'business.instagram', label: 'URL Instagram', type: 'url' },
+      { key: 'business.facebook', label: 'URL Facebook', type: 'url' },
+    ],
+  },
+  {
+    group: 'landing',
+    title: 'Textos de la landing',
+    items: [
+      { key: 'landing.hero_title', label: 'Título del hero', type: 'text' },
+      { key: 'landing.hero_subtitle', label: 'Subtítulo del hero', type: 'textarea' },
+      { key: 'landing.about_title', label: 'Título sección "Nosotros"', type: 'text' },
+      { key: 'landing.about_text', label: 'Texto sección "Nosotros"', type: 'textarea' },
+    ],
+  },
 ];
 
 export default function ConfiguracionPage() {
@@ -45,7 +67,7 @@ export default function ConfiguracionPage() {
         key: k,
         value: v,
         type: 'string',
-        group: k.split('.')[0] === 'landing' ? 'landing' : 'business',
+        group: k.split('.')[0] || 'business',
       }));
       await apiFetch('/settings', { method: 'POST', body: { items: changed } });
       setOriginal(data);
@@ -78,15 +100,35 @@ export default function ConfiguracionPage() {
       <div className="px-6 lg:px-10 pb-10 space-y-6 max-w-3xl">
         {FIELDS.map((section) => (
           <Card key={section.group}>
-            <CardHeader title={section.group === 'business' ? 'Datos del negocio' : 'Textos de la landing'} />
+            <CardHeader title={section.title} subtitle={section.subtitle} />
             <CardBody className="space-y-4">
               {section.items.map((f) => (
                 <div key={f.key}>
                   <Label>{f.label}</Label>
                   {f.type === 'textarea' ? (
                     <Textarea rows={3} value={data[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} />
+                  ) : f.type === 'color' ? (
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={data[f.key] || '#A435F0'}
+                        onChange={(e) => set(f.key, e.target.value)}
+                        className="w-14 h-10 rounded-lg cursor-pointer border"
+                        style={{ borderColor: 'var(--border)', background: 'transparent' }}
+                      />
+                      <Input
+                        type="text"
+                        placeholder="#A435F0"
+                        value={data[f.key] ?? ''}
+                        onChange={(e) => set(f.key, e.target.value)}
+                        className="flex-1 font-mono uppercase"
+                      />
+                    </div>
                   ) : (
                     <Input type={f.type} placeholder={f.placeholder} value={data[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} />
+                  )}
+                  {f.hint && (
+                    <div className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>{f.hint}</div>
                   )}
                 </div>
               ))}

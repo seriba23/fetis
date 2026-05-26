@@ -200,6 +200,10 @@ const SETTINGS = [
   { key: 'landing.hero_subtitle', value: 'Diseño exclusivo, materiales premium y fabricación artesanal. Cada mueble Fetis es único, como tu hogar.', group: 'landing' },
   { key: 'landing.about_title', value: 'Carpintería con visión de diseño', group: 'landing' },
   { key: 'landing.about_text', value: 'En Fetis combinamos técnica tradicional con diseño contemporáneo. Cada pieza se proyecta a medida, se construye con maderas y herrajes de la más alta calidad, y se entrega lista para integrarse a tu espacio.', group: 'landing' },
+  // Branding (logo + color principal) — editable desde /admin/configuracion
+  { key: 'branding.logo_text', value: 'FETIS', group: 'branding' },
+  { key: 'branding.logo_subtitle', value: 'MUEBLES', group: 'branding' },
+  { key: 'branding.primary_color', value: '#A435F0', group: 'branding' },
 ];
 
 // ----- Mapeo de fotos a categorías -----

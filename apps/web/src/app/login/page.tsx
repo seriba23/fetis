@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Lock, Mail } from 'lucide-react';
 import { login } from '@/lib/auth-client';
+import { publicApi } from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +13,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logoText, setLogoText] = useState('FETIS');
+  const [logoSubtitle, setLogoSubtitle] = useState('MUEBLES');
+
+  useEffect(() => {
+    publicApi.business()
+      .then((b) => {
+        if (b['branding.logo_text']) setLogoText(b['branding.logo_text']);
+        if (b['branding.logo_subtitle'] !== undefined) setLogoSubtitle(b['branding.logo_subtitle']);
+      })
+      .catch(() => {});
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,8 +47,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <Link href="/" className="block mb-10 text-center">
           <span className="text-3xl font-display">
-            <span className="gradient-text">FETIS</span>
-            <span className="text-ink-500 dark:text-white/40 text-xs ml-2 tracking-[0.3em]">MUEBLES</span>
+            <span className="gradient-text">{logoText}</span>
+            {logoSubtitle && (
+              <span className="text-ink-500 dark:text-white/40 text-xs ml-2 tracking-[0.3em]">{logoSubtitle}</span>
+            )}
           </span>
         </Link>
 
