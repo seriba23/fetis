@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Search, Phone, Mail, MapPin, X } from 'lucide-react';
+import { Plus, Search, Phone, Mail, MapPin, X, Trash2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { formatDate, formatClientAddress } from '@fetis/shared';
 import { PageHeader } from '@/components/admin/page-header';
@@ -232,10 +232,36 @@ function ClientForm({ onClose, onSaved, initial }: { onClose: () => void; onSave
 function ClientDetailModal({ id, onClose, onChange }: { id: string; onClose: () => void; onChange: () => void }) {
   const [client, setClient] = useState<any | null>(null);
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteErr, setDeleteErr] = useState<string | null>(null);
 
   useEffect(() => {
     apiFetch(`/clients/${id}`).then(setClient);
   }, [id]);
+
+  async function onDelete() {
+    if (!client) return;
+    const blockers: string[] = [];
+    if (client.quotes?.length) blockers.push(`${client.quotes.length} cotización(es)`);
+    if (client.payments?.length) blockers.push(`${client.payments.length} pago(s)`);
+    if (blockers.length) {
+      setDeleteErr(`No se puede eliminar: el cliente tiene ${blockers.join(' y ')} asociadas. Bórralas primero o archiva al cliente.`);
+      return;
+    }
+    const apptInfo = client.appointments?.length ? ` (y sus ${client.appointments.length} cita(s) asociada(s))` : '';
+    if (!confirm(`¿Eliminar a "${client.name}" definitivamente${apptInfo}? Esta acción no se puede deshacer.`)) return;
+    setDeleteErr(null);
+    setDeleting(true);
+    try {
+      await apiFetch(`/clients/${id}`, { method: 'DELETE' });
+      onChange();
+      onClose();
+    } catch (e: any) {
+      setDeleteErr(e?.message ?? 'No se pudo eliminar el cliente.');
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   if (!client) return <Modal open onClose={onClose}><div className="p-10 text-sm text-[color:var(--text-muted)]">Cargando...</div></Modal>;
 
@@ -294,9 +320,20 @@ function ClientDetailModal({ id, onClose, onChange }: { id: string; onClose: () 
           ) : <Empty>Sin pagos</Empty>}
         </Section>
 
-        <div className="flex justify-end gap-2 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-          <Button variant="outline" onClick={() => setEditing(true)}>Editar</Button>
-          <Button onClick={onClose}>Cerrar</Button>
+        {deleteErr && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-300 px-4 py-3 text-sm">
+            {deleteErr}
+          </div>
+        )}
+
+        <div className="flex justify-between gap-2 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+          <Button variant="danger" onClick={onDelete} disabled={deleting}>
+            <Trash2 size={14} /> {deleting ? 'Eliminando...' : 'Eliminar'}
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setEditing(true)}>Editar</Button>
+            <Button onClick={onClose}>Cerrar</Button>
+          </div>
         </div>
       </div>
 
