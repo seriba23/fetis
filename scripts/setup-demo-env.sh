@@ -71,7 +71,7 @@ NEXT_PUBLIC_BASE_PATH="${BASE_PATH}"
 
 # URLs absolutas que ven los clientes (basePath ya incluido)
 NEXT_PUBLIC_API_URL="https://${DOMAIN}${BASE_PATH}/api"
-NEXT_PUBLIC_UPLOADS_URL="https://${DOMAIN}"
+NEXT_PUBLIC_UPLOADS_URL="https://${DOMAIN}${BASE_PATH}"
 NEXT_PUBLIC_SITE_URL="https://${DOMAIN}${BASE_PATH}"
 
 SEED_ADMIN_EMAIL="admin@${DOMAIN}"
