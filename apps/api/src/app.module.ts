@@ -16,10 +16,16 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { PublicModule } from './modules/public/public.module';
 import { SettingsModule } from './modules/settings/settings.module';
 
+// Path absoluto al directorio uploads. En prod con PM2 cwd=apps/api,
+// process.cwd() es /home/<dominio>/fetis/apps/api, '..', '..', 'uploads'
+// resuelve al uploads del root del monorepo. En dev (turbo) cwd también
+// es apps/api. Permite override absoluto via env.
+const UPLOADS_DIR = process.env.UPLOADS_DIR || join(process.cwd(), '..', '..', 'uploads');
+
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', '..', 'uploads'),
+      rootPath: UPLOADS_DIR,
       serveRoot: '/uploads',
     }),
     PrismaModule,

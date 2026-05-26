@@ -6,7 +6,7 @@ import { mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { UploadsController } from './uploads.controller';
 
-const UPLOADS_ROOT = join(__dirname, '..', '..', '..', '..', '..', 'uploads');
+const UPLOADS_ROOT = process.env.UPLOADS_DIR || join(process.cwd(), '..', '..', 'uploads');
 
 @Module({
   imports: [
