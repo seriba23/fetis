@@ -76,7 +76,7 @@ export default function FinanzasPage() {
         subtitle="Gestiona gastos eventuales y plantillas recurrentes"
         actions={
           tab === 'templates' ? (
-            <Button onClick={() => setCreatingTemplate(true)}><Plus size={16} /> Nueva plantilla</Button>
+            <Button onClick={() => setCreatingTemplate(true)}><Plus size={16} /> Pago recurrente</Button>
           ) : (
             <Button onClick={() => setCreatingExpense(true)}><Plus size={16} /> Gasto eventual</Button>
           )
@@ -141,7 +141,7 @@ export default function FinanzasPage() {
         {tab === 'templates' && (
           <Card>
             {templates.length === 0 ? (
-              <div className="p-10 text-center text-sm text-[color:var(--text-muted)]">Sin plantillas recurrentes. Crea una para automatizar rentas, salarios, etc.</div>
+              <div className="p-10 text-center text-sm text-[color:var(--text-muted)]">Sin pagos recurrentes. Crea uno para automatizar rentas, salarios, etc.</div>
             ) : (
               <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
                 {templates.map((t) => (
@@ -187,8 +187,8 @@ export default function FinanzasPage() {
 function Tabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: 'calendar', label: 'Calendario', icon: CalendarRange },
-    { id: 'list', label: 'Lista de gastos', icon: List },
-    { id: 'templates', label: 'Plantillas recurrentes', icon: Repeat },
+    { id: 'templates', label: 'Recurrentes', icon: Repeat },
+    { id: 'list', label: 'Lista', icon: List },
   ];
   return (
     <div className="flex gap-1 p-1 rounded-xl flex-wrap max-w-full" style={{ background: 'var(--bg-surface-hover)' }}>
@@ -206,7 +206,7 @@ function Tabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
           >
             <Icon size={14} />
             <span className="hidden sm:inline">{t.label}</span>
-            <span className="sm:hidden">{t.id === 'templates' ? 'Plantillas' : t.id === 'list' ? 'Lista' : 'Calendario'}</span>
+            <span className="sm:hidden">{t.id === 'templates' ? 'Recurr.' : t.id === 'list' ? 'Lista' : 'Cal.'}</span>
           </button>
         );
       })}
@@ -354,9 +354,14 @@ function TemplateForm({ initial, onClose, onSaved }: { initial?: any; onClose: (
     }
   }
 
-  async function onDelete() {
-    if (!confirm('¿Desactivar esta plantilla? Las ocurrencias ya materializadas no se eliminarán.')) return;
+  async function onDeactivate() {
+    if (!confirm('¿Desactivar este pago recurrente?\n\nLas ocurrencias futuras dejarán de generarse, pero los gastos ya materializados se conservan en el historial.')) return;
     await apiFetch(`/expense-templates/${initial.id}`, { method: 'DELETE' });
+    onSaved();
+  }
+  async function onHardDelete() {
+    if (!confirm('¿ELIMINAR este pago recurrente de forma definitiva?\n\nEsto borra el registro de la base de datos. Los gastos materializados se conservan pero pierden la referencia a este recurrente. Esta acción no se puede deshacer.')) return;
+    await apiFetch(`/expense-templates/${initial.id}?hard=true`, { method: 'DELETE' });
     onSaved();
   }
 
@@ -439,9 +444,10 @@ function TemplateForm({ initial, onClose, onSaved }: { initial?: any; onClose: (
         </div>
 
         {err && <div className="text-sm text-red-500">{err}</div>}
-        <div className="flex justify-between gap-2 pt-2">
-          <div>
-            {initial && <Button type="button" variant="danger" onClick={onDelete}>Desactivar</Button>}
+        <div className="flex justify-between gap-2 pt-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
+            {initial && <Button type="button" variant="outline" onClick={onDeactivate}>Desactivar</Button>}
+            {initial && <Button type="button" variant="danger" onClick={onHardDelete}>Eliminar</Button>}
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>

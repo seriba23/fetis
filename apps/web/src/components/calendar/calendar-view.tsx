@@ -48,6 +48,25 @@ export function CalendarView({ events, mode, onEventClick, onSlotClick, initialV
     setCursor(dayjs());
   }
 
+  // En vista mes o semana, clicks en celdas o eventos hacen drill-down a la vista de día
+  // para que las acciones (crear, editar, marcar pagado) se ejecuten en el contexto correcto.
+  function handleSlotClick(d: Date) {
+    if (view !== 'day') {
+      setView('day');
+      setCursor(dayjs(d));
+    } else {
+      onSlotClick?.(d);
+    }
+  }
+  function handleEventClick(ev: CalendarEvent) {
+    if (view !== 'day') {
+      setView('day');
+      setCursor(dayjs(ev.start));
+    } else {
+      onEventClick?.(ev);
+    }
+  }
+
   return (
     <div className="rounded-2xl overflow-hidden border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
       {/* Header */}
@@ -86,9 +105,9 @@ export function CalendarView({ events, mode, onEventClick, onSlotClick, initialV
 
       {loading && <div className="px-6 py-2 text-xs" style={{ color: 'var(--text-muted)' }}>Cargando eventos...</div>}
 
-      {view === 'month' && <MonthView cursor={cursor} events={events} onEventClick={onEventClick} onSlotClick={onSlotClick} />}
-      {view === 'week' && <WeekView cursor={cursor} events={events} onEventClick={onEventClick} onSlotClick={onSlotClick} mode={mode} />}
-      {view === 'day' && <DayView cursor={cursor} events={events} onEventClick={onEventClick} onSlotClick={onSlotClick} mode={mode} />}
+      {view === 'month' && <MonthView cursor={cursor} events={events} onEventClick={handleEventClick} onSlotClick={handleSlotClick} />}
+      {view === 'week' && <WeekView cursor={cursor} events={events} onEventClick={handleEventClick} onSlotClick={handleSlotClick} mode={mode} />}
+      {view === 'day' && <DayView cursor={cursor} events={events} onEventClick={handleEventClick} onSlotClick={handleSlotClick} mode={mode} />}
     </div>
   );
 }

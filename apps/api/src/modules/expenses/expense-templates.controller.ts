@@ -30,7 +30,8 @@ export class ExpenseTemplatesController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string, @Query('hard') hard?: string) {
+    if (hard === 'true') return this.templates.hardRemove(id);
     return this.templates.remove(id);
   }
 }

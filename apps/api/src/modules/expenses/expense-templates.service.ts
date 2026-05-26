@@ -63,4 +63,11 @@ export class ExpenseTemplatesService {
     await this.prisma.expenseTemplate.update({ where: { id }, data: { active: false } });
     return { ok: true };
   }
+
+  async hardRemove(id: string) {
+    await this.findOne(id);
+    // onDelete: SetNull en Expense.template — gastos materializados quedan huérfanos pero se conservan
+    await this.prisma.expenseTemplate.delete({ where: { id } });
+    return { ok: true };
+  }
 }
