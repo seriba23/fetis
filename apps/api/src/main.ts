@@ -22,14 +22,19 @@ async function bootstrap() {
   // Servir uploads como estáticos sin fallback de SPA.
   // En prod (pm2 cwd=apps/api) y en dev (turbo cwd=apps/api),
   // process.cwd()/../../uploads apunta al directorio del root del monorepo.
+  // UPLOADS_PREFIX permite servir bajo /muebleria/uploads/ en deploys
+  // que viven detrás de un subpath (ej. ingenieroibarra.com/muebleria).
   const UPLOADS_DIR = process.env.UPLOADS_DIR || join(process.cwd(), '..', '..', 'uploads');
+  const UPLOADS_PREFIX = process.env.UPLOADS_PREFIX || '/uploads/';
   app.useStaticAssets(UPLOADS_DIR, {
-    prefix: '/uploads/',
+    prefix: UPLOADS_PREFIX,
     index: false,
     fallthrough: true,
   });
 
-  app.setGlobalPrefix('api');
+  // API_GLOBAL_PREFIX permite montar las rutas bajo /muebleria/api en demos
+  // (default 'api'). Importante: no incluir el slash inicial.
+  app.setGlobalPrefix(process.env.API_GLOBAL_PREFIX || 'api');
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
 
