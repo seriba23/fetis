@@ -191,7 +191,7 @@ function Tabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
     { id: 'templates', label: 'Plantillas recurrentes', icon: Repeat },
   ];
   return (
-    <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-surface-hover)' }}>
+    <div className="flex gap-1 p-1 rounded-xl flex-wrap max-w-full" style={{ background: 'var(--bg-surface-hover)' }}>
       {tabs.map((t) => {
         const Icon = t.icon;
         const active = tab === t.id;
@@ -199,13 +199,14 @@ function Tabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 whitespace-nowrap ${
               active ? 'bg-brand-500 text-white shadow' : ''
             }`}
             style={!active ? { color: 'var(--text-secondary)' } : undefined}
           >
             <Icon size={14} />
-            {t.label}
+            <span className="hidden sm:inline">{t.label}</span>
+            <span className="sm:hidden">{t.id === 'templates' ? 'Plantillas' : t.id === 'list' ? 'Lista' : 'Calendario'}</span>
           </button>
         );
       })}
