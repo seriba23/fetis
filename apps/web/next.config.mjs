@@ -9,6 +9,10 @@ const basePath = (process.env.NEXT_PUBLIC_BASE_PATH || '').replace(/\/$/, '');
 const nextConfig = {
   reactStrictMode: true,
   basePath: basePath || undefined,
+  // Sin esto, Next.js redirige /muebleria/ -> /muebleria con 308 y OLS
+  // tiene un context /muebleria/ que redirige /muebleria -> /muebleria/
+  // con 301, creando loop infinito al entrar a la URL del subpath.
+  skipTrailingSlashRedirect: true,
   transpilePackages: ['@fetis/shared'],
   images: {
     remotePatterns: [
