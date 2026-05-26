@@ -203,19 +203,37 @@ function Kpi({
   };
   return (
     <Card>
-      <CardBody>
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{label}</div>
-            <div className="text-2xl lg:text-3xl font-display mt-2" style={{ color: 'var(--text-primary)' }}>
-              {valueAsString ? value : value.toLocaleString('es-MX')}
-            </div>
-            {sub && <div className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>{sub}</div>}
+      <CardBody className="p-4 sm:p-5 lg:p-6">
+        <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
+          <div
+            className="text-[10px] sm:text-xs uppercase tracking-widest flex-1 min-w-0"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            {label}
           </div>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorClasses[color]}`}>
-            <Icon size={18} />
+          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 ${colorClasses[color]}`}>
+            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-[18px] lg:h-[18px]" />
           </div>
         </div>
+        <div
+          className="font-display tabular-nums leading-tight"
+          style={{
+            color: 'var(--text-primary)',
+            fontSize: 'clamp(1.05rem, 4.5vw, 1.875rem)',
+          }}
+          title={valueAsString ? value : String(value)}
+        >
+          {valueAsString ? value : value.toLocaleString('es-MX')}
+        </div>
+        {sub && (
+          <div
+            className="text-[10px] sm:text-xs mt-1.5 truncate"
+            style={{ color: 'var(--text-muted)' }}
+            title={sub}
+          >
+            {sub}
+          </div>
+        )}
       </CardBody>
     </Card>
   );
