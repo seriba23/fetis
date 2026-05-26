@@ -176,9 +176,9 @@ export function ContactForm({ furnitureTypes }: { furnitureTypes: any[] }) {
         }
         :global(.input:focus) {
           outline: none;
-          border-color: rgba(164, 53, 240, 0.5);
-          background: rgba(164, 53, 240, 0.04);
-          box-shadow: 0 0 0 3px rgba(164, 53, 240, 0.15);
+          border-color: color-mix(in srgb, var(--brand) 50%, transparent);
+          background: color-mix(in srgb, var(--brand) 4%, transparent);
+          box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 15%, transparent);
         }
         :global([data-theme='dark'] .input:focus) {
           background: rgba(255, 255, 255, 0.06);

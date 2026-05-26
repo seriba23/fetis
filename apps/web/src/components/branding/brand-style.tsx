@@ -2,6 +2,10 @@
 // y emite un <style> que sobrescribe la paleta brand-* de Tailwind con el
 // color elegido. Usa color-mix(in oklch, ...) para derivar shades 400/600
 // y mantener consistencia con el gradiente del logo.
+//
+// Las reglas usan !important porque las clases de Tailwind compiladas con
+// dark: tienen mayor specificity (parent selector [data-theme="dark"] + clase),
+// y replicar la specificity por cada combinación inflaría mucho el CSS.
 import { publicApi } from '@/lib/api';
 
 const DEFAULT_COLOR = '#A435F0';
@@ -16,48 +20,64 @@ export async function BrandStyle() {
     // Si el API no responde, mantenemos el default — no rompe la página.
   }
 
+  const lighter = (pct: number) => `color-mix(in oklch, ${color}, white ${pct}%)`;
+  const darker = (pct: number) => `color-mix(in oklch, ${color}, black ${pct}%)`;
+  const alpha = (pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+
   const css = `
-:root { --brand: ${color}; }
+:root { --brand: ${color}; --brand-tint: ${alpha(10)}; }
 
 .gradient-text {
-  background: linear-gradient(135deg,
-    color-mix(in oklch, ${color}, white 12%) 0%,
-    ${color} 50%,
-    color-mix(in oklch, ${color}, black 22%) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, ${lighter(12)} 0%, ${color} 50%, ${darker(22)} 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
 }
 
-.bg-brand-500 { background-color: ${color}; }
-.bg-brand-600, .hover\\:bg-brand-600:hover { background-color: color-mix(in oklch, ${color}, black 12%); }
-.hover\\:bg-brand-500:hover { background-color: ${color}; }
+.gradient-bg {
+  background:
+    radial-gradient(ellipse at top, ${alpha(18)}, transparent 60%),
+    radial-gradient(ellipse at bottom right, ${alpha(10)}, transparent 50%) !important;
+}
 
-.bg-brand-500\\/5 { background-color: color-mix(in srgb, ${color} 5%, transparent); }
-.bg-brand-500\\/10, .hover\\:bg-brand-500\\/10:hover { background-color: color-mix(in srgb, ${color} 10%, transparent); }
-.bg-brand-500\\/15 { background-color: color-mix(in srgb, ${color} 15%, transparent); }
-.bg-brand-500\\/20, .group:hover .group-hover\\:bg-brand-500\\/20 { background-color: color-mix(in srgb, ${color} 20%, transparent); }
+.bg-brand-500 { background-color: ${color} !important; }
+.bg-brand-600, .hover\\:bg-brand-600:hover { background-color: ${darker(12)} !important; }
+.hover\\:bg-brand-500:hover { background-color: ${color} !important; }
 
-.text-brand-200 { color: color-mix(in oklch, ${color}, white 32%); }
-.text-brand-300, .hover\\:text-brand-300:hover { color: color-mix(in oklch, ${color}, white 22%); }
-.text-brand-400, .hover\\:text-brand-400:hover, .dark\\:text-brand-400, .dark\\:group-hover\\:text-brand-400 { color: color-mix(in oklch, ${color}, white 12%); }
-.text-brand-500, .hover\\:text-brand-500:hover, .group-hover\\:text-brand-500 { color: ${color}; }
-.text-brand-600, .hover\\:text-brand-600:hover, .dark\\:text-brand-600 { color: color-mix(in oklch, ${color}, black 12%); }
-.text-brand-700 { color: color-mix(in oklch, ${color}, black 22%); }
+.bg-brand-500\\/0 { background-color: transparent !important; }
+.bg-brand-500\\/5 { background-color: ${alpha(5)} !important; }
+.bg-brand-500\\/10, .hover\\:bg-brand-500\\/10:hover { background-color: ${alpha(10)} !important; }
+.bg-brand-500\\/15, .group:hover .group-hover\\:bg-brand-500\\/15 { background-color: ${alpha(15)} !important; }
+.bg-brand-500\\/20, .group:hover .group-hover\\:bg-brand-500\\/20 { background-color: ${alpha(20)} !important; }
 
-.border-brand-500 { border-color: ${color}; }
-.border-brand-500\\/30 { border-color: color-mix(in srgb, ${color} 30%, transparent); }
-.border-brand-500\\/40, .hover\\:border-brand-500\\/40:hover { border-color: color-mix(in srgb, ${color} 40%, transparent); }
-.border-brand-500\\/60, .focus\\:border-brand-500\\/60:focus { border-color: color-mix(in srgb, ${color} 60%, transparent); }
+.text-brand-200 { color: ${lighter(32)} !important; }
+.text-brand-300, .hover\\:text-brand-300:hover { color: ${lighter(22)} !important; }
+.text-brand-400, .hover\\:text-brand-400:hover, .dark\\:text-brand-400, .dark\\:group-hover\\:text-brand-400 { color: ${lighter(12)} !important; }
+.text-brand-500, .hover\\:text-brand-500:hover, .group-hover\\:text-brand-500 { color: ${color} !important; }
+.text-brand-600, .hover\\:text-brand-600:hover, .dark\\:text-brand-600 { color: ${darker(12)} !important; }
+.text-brand-700 { color: ${darker(22)} !important; }
 
-.ring-brand-500\\/15, .focus\\:ring-brand-500\\/15:focus { --tw-ring-color: color-mix(in srgb, ${color} 15%, transparent); box-shadow: 0 0 0 3px var(--tw-ring-color); }
+.text-brand-500\\/15 { color: ${alpha(15)} !important; }
+.text-brand-500\\/20 { color: ${alpha(20)} !important; }
+.text-brand-500\\/40 { color: ${alpha(40)} !important; }
+.text-brand-500\\/60 { color: ${alpha(60)} !important; }
 
-.shadow-brand-glow { box-shadow: 0 0 30px -10px color-mix(in srgb, ${color} 50%, transparent); }
+.border-brand-500 { border-color: ${color} !important; }
+.border-brand-500\\/30 { border-color: ${alpha(30)} !important; }
+.border-brand-500\\/40, .hover\\:border-brand-500\\/40:hover { border-color: ${alpha(40)} !important; }
+.border-brand-500\\/60, .focus\\:border-brand-500\\/60:focus { border-color: ${alpha(60)} !important; }
 
-.from-brand-500 { --tw-gradient-from: ${color}; --tw-gradient-to: color-mix(in srgb, ${color} 0%, transparent); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.from-brand-500\\/10 { --tw-gradient-from: color-mix(in srgb, ${color} 10%, transparent); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.to-brand-500 { --tw-gradient-to: ${color}; }
-.to-brand-600 { --tw-gradient-to: color-mix(in oklch, ${color}, black 12%); }
+.focus\\:ring-brand-500\\/15:focus { --tw-ring-color: ${alpha(15)} !important; }
+.focus\\:ring-brand-500\\/20:focus { --tw-ring-color: ${alpha(20)} !important; }
+
+.shadow-brand-glow { box-shadow: 0 0 30px -10px ${alpha(50)} !important; }
+
+.from-brand-500 { --tw-gradient-from: ${color} !important; }
+.from-brand-500\\/10 { --tw-gradient-from: ${alpha(10)} !important; }
+.from-brand-500\\/5 { --tw-gradient-from: ${alpha(5)} !important; }
+.to-brand-500 { --tw-gradient-to: ${color} !important; }
+.to-brand-600 { --tw-gradient-to: ${darker(12)} !important; }
+.via-brand-500 { --tw-gradient-via: ${color} !important; }
 `.trim();
 
   return <style dangerouslySetInnerHTML={{ __html: css }} />;
