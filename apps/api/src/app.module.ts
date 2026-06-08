@@ -13,10 +13,12 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { PublicModule } from './modules/public/public.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
     PrismaModule,
+    MailModule,
     AuthModule,
     UsersModule,
     ClientsModule,

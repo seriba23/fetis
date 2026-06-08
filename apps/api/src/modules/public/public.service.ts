@@ -1,14 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ClientsService } from '../clients/clients.service';
+import { MailService } from '../mail/mail.service';
 import { CreateContactRequestDto } from './dto/create-contact-request.dto';
+import { buildContactEmailHtml, buildContactEmailText } from './contact-email.template';
 
 @Injectable()
 export class PublicService {
+  private readonly logger = new Logger(PublicService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly clients: ClientsService,
+    private readonly mail: MailService,
   ) {}
 
   async getGallery(categorySlug?: string, limit?: number) {
@@ -88,11 +93,53 @@ export class PublicService {
       },
     });
 
+    this.sendContactNotification(dto, phone, appointment.startTime).catch((err) => {
+      this.logger.error(`Notificación de contacto falló: ${err?.message ?? err}`);
+    });
+
     return {
       ok: true,
       message: 'Gracias, tu solicitud fue recibida. Te contactaremos en menos de 24 horas.',
       requestId: contactRequest.id,
     };
+  }
+
+  private async sendContactNotification(
+    dto: CreateContactRequestDto,
+    phone: string,
+    appointmentStart: Date,
+  ) {
+    const to = process.env.CONTACT_NOTIFICATION_EMAIL?.trim();
+    if (!to) {
+      this.logger.warn('CONTACT_NOTIFICATION_EMAIL no configurada, se omite el email');
+      return;
+    }
+
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:4000').replace(/\/$/, '');
+    const adminUrl = `${siteUrl}/admin/clientes`;
+    const phoneFormatted = phone.length === 10 ? `${phone.slice(0, 2)} ${phone.slice(2, 6)} ${phone.slice(6)}` : phone;
+    const furnitureTypeLabel = dto.furnitureType ? this.furnitureLabel(dto.furnitureType) : null;
+    const appointmentDate = dayjs(appointmentStart).format('DD/MM/YYYY HH:mm') + 'h';
+
+    const data = {
+      name: dto.name,
+      phone,
+      phoneFormatted,
+      email: dto.email && dto.email !== '' ? dto.email : null,
+      furnitureTypeLabel,
+      message: dto.message,
+      source: dto.source ?? null,
+      appointmentDate,
+      adminUrl,
+    };
+
+    await this.mail.send({
+      to,
+      subject: `Nueva solicitud: ${dto.name}${furnitureTypeLabel ? ` — ${furnitureTypeLabel}` : ''}`,
+      html: buildContactEmailHtml(data),
+      text: buildContactEmailText(data),
+      replyTo: data.email ?? undefined,
+    });
   }
 
   private furnitureLabel(slug: string) {
